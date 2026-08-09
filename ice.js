@@ -3,42 +3,48 @@
 
 
 var vertexShaderSource = `#version 300 es
-// an attribute is an input (in) to a vertex shader.
-// It will receive data from a buffer
 in vec4 a_position;
 in vec2 a_texcoord;
 
-// A matrix to transform the positions by
 uniform mat4 u_matrix;
 
-// a varying to pass the texture coordinates to the fragment shader
 out vec2 v_texcoord;
+out vec3 v_position;
 
-// all shaders have a main function
 void main() {
-  // Multiply the position by the matrix.
   gl_Position = u_matrix * a_position;
-
-  // Pass the texcoord to the fragment shader.
   v_texcoord = a_texcoord;
+  v_position = gl_Position.xyz;
 }
 `;
 
 var fragmentShaderSource = `#version 300 es
-
 precision highp float;
 
-// Passed in from the vertex shader.
 in vec2 v_texcoord;
-
-// The texture.
+in vec3 v_position;
 uniform sampler2D u_texture;
-
-// we need to declare an output for the fragment shader
 out vec4 outColor;
 
 void main() {
-  outColor = texture(u_texture, v_texcoord);
+  vec4 texColor = texture(u_texture, v_texcoord);
+
+  // Subtle ice-blue tint
+  vec3 iceTint = vec3(0.85, 0.92, 1.0);
+  vec3 glass = mix(texColor.rgb, iceTint, 0.15);
+
+  // Fresnel-like effect: edges more opaque
+  vec2 center = v_texcoord - 0.5;
+  float edge = smoothstep(0.0, 0.5, length(center));
+  float alpha = mix(0.6, 0.9, edge);
+
+  // Light from below
+  vec3 lightDir = normalize(vec3(0.0, -1.0, 0.5));
+  float highlight = max(0.0, dot(normalize(v_position), lightDir));
+  highlight = pow(highlight, 4.0) * 0.2;
+  glass += vec3(1.0, 0.8, 0.7) * highlight;
+
+  outColor = vec4(glass, alpha);
 }
 `;
 
@@ -47,7 +53,7 @@ function main() {
   /** @type {HTMLCanvasElement} */
   var canvas = document.querySelector("#c");
 
-  var gl = canvas.getContext("webgl2");
+  var gl = canvas.getContext("webgl2", { antialias: true });
   if (!gl) {
     return;
   }
@@ -169,6 +175,10 @@ function main() {
 
     // tell webgl to cull faces
     gl.enable(gl.CULL_FACE);
+
+    // enable blending for frosted transparency
+    gl.enable(gl.BLEND);
+    gl.blendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA);
 
     // Tell it to use our program (pair of shaders)
     gl.useProgram(program);
