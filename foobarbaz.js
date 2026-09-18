@@ -1,3 +1,4 @@
+// mailto link
 const foo = "admin";
 const bar = "carnun";
 const baz = document.getElementById("baz");
