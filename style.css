@@ -10,7 +10,7 @@
 }
 
 html {
-  font-size: 24px;
+  font-size: 18px;
 }
 
 body {
@@ -45,7 +45,7 @@ body {
   max-width: 1000px;
 }
 
-h1, h2, h3, p, a, span, ul {
+h1, h2, h3, p, a, span, ul, ol {
   font-family: 'IBM Plex Serif', serif;
   color: var(--light);
 }
@@ -58,7 +58,7 @@ h2 {
   margin: 0;
 }
 
-p {
+p, ul, ol {
   margin-bottom: 1rem;
 }
 
@@ -67,7 +67,7 @@ sup a {
 }
 
 .footnote {
-  font-size: 20px;
+  font-size: 16px;
   margin-bottom: 0.5rem;
 }
 
